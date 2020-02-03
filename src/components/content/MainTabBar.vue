@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="main-tab-bar">
     <tab-bar>
       <tab-bar-item link="/home" activeColor="deepPink">
         <img slot="item-icon" src="~assets/img/tabbar/home.svg" alt />
@@ -29,12 +29,12 @@
 import TabBar from "components/common/tabbar/TabBar.vue";
 import TabBarItem from "components/common/tabbar/TabBarItem.vue";
 export default {
-  components:{
+  components: {
     TabBar,
     TabBarItem
   }
 };
 </script>
 
-<style>
+<style scoped>
 </style>

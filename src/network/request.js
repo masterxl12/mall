@@ -12,7 +12,7 @@ export function request(config) {
   instance.interceptors.response.use(res => {
     return res.data
   }, err => {
-    consoe.log(err)
+    // console.log(err)
   })
   return instance(config);
 }
