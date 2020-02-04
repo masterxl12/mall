@@ -1,12 +1,12 @@
 <template>
   <div class="tab-control">
-    <div
-      v-for="(item,index) in titles"
-      :key="item"
-      class="tab-control-item"
-      @click="indexHandle(index)"
+    <!--因为需求上看这里只是字不一样所以并没有使用插槽-->
+    <div v-for="(item, index) in titles"
+         :key="item"
+         class="tab-control-item"
+         @click="tabItemClick(index)"
     >
-      <span :class="{active:index===currentIndex}">{{item}}</span>
+      <span :class="{active:index === currentIndex}">{{item}}</span>
     </div>
   </div>
 </template>
@@ -28,7 +28,7 @@ export default {
     };
   },
   methods: {
-    indexHandle(index) {
+    tabItemClick(index) {
       this.currentIndex = index;
       this.$emit("tabClick", index);
     }
@@ -57,4 +57,5 @@ export default {
     border-bottom: 2px solid var(--color-tint);
     color: var(--color-high-text);
   }
+
 </style>

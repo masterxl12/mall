@@ -3,6 +3,13 @@
     <nav-bar class="home-bar">
       <div slot="center">购物街</div>
     </nav-bar>
+    <tab-control
+      :titles="['流行','新款','精选']"
+      ref="tabControl1"
+      class="tab-control"
+      @tabClick="tabClick"
+      v-show="isTabFixed"
+    />
     <scroll
       class="content"
       ref="scroll"
@@ -11,10 +18,15 @@
       @scroll="contentScroll"
       @pullingUp="loadMore"
     >
-      <home-swiper :banners="banners" />
+      <home-swiper :banners="banners" @swiperImgLoad="swiperLoadFinish" />
       <recommend-view :recommends="recommends" />
       <feature-view />
-      <tab-control :titles="['流行','新款','精选']" class="tab-control" @tabClick="tabClick" />
+      <tab-control
+        :titles="['流行','新款','精选']"
+        ref="tabControl2"
+        :class="{fixed:isTabFixed}"
+        @tabClick="tabClick"
+      />
       <good-list :goods="showGoods" />
     </scroll>
     <back-top @click.native="backTop" v-show="isShowBackTop" />
@@ -45,7 +57,10 @@ export default {
         sell: { page: 0, list: [] }
       },
       currentType: "pop",
-      isShowBackTop: true
+      isShowBackTop: true,
+      isTabFixed: false,
+      tabOffsetTop: 0,
+      saveY:0
     };
   },
   components: {
@@ -67,7 +82,7 @@ export default {
     /**
      * 事件监听相关的方法
      */
-     // 点击的是流行，精选还是新品类型
+    // 点击的是流行，精选还是新品类型
     tabClick(index) {
       switch (index) {
         case 0:
@@ -80,6 +95,8 @@ export default {
           this.currentType = "sell";
           break;
       }
+      this.$refs.tabControl1.currentIndex = index;
+      this.$refs.tabControl2.currentIndex = index;
     },
     backTop() {
       // console.log(this.$refs.scroll.scrollTo);
@@ -87,14 +104,30 @@ export default {
     },
     // 监听回到顶部组件的显示与隐藏
     contentScroll(position) {
-      this.isShowBackTop = -position.y > 1000;
+      // 1. 判断BackTop是否显示
+      this.isShowBackTop = (-position.y) > 1000;
+      // 2. 决定tabControl是否吸顶（position:fixed）
+      this.isTabFixed = (-position.y) > this.tabOffsetTop;
     },
     // 上拉加载更多
-    loadMore(){
+    loadMore() {
       // console.log('上拉加载更多！')
       this.getHomeGoods(this.currentType);
-      // 手动刷新
-      this.$refs.scroll.scroll.refresh()
+    },
+    // 防抖函数
+    debounce(func, delay) {
+      let timer = null;
+      return function(...args) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          func.apply(args);
+        }, delay);
+      };
+    },
+    // 首页轮播图加载完成
+    swiperLoadFinish() {
+      this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop - 44
+      // console.log(this.$refs.tabControl.$el.offsetTop);
     },
     /**
      * 强求网络接口相关的方法
@@ -110,18 +143,37 @@ export default {
       getHomeGoods(type, page).then(res => {
         this.goods[type].list.push(...res.data.list);
         this.goods[type].page += 1;
-        // 完成加载更多
-        this.$refs.scroll.finishPullUp()
-        // console.log(res);
+        // 完成上拉加载更多
+        this.$refs.scroll.finishPullUp();
       });
     }
   },
   created() {
+    // 1.请求多个数据
     this.getHomeMultidata();
+    // 2.请求商品数据
     this.getHomeGoods("pop");
     this.getHomeGoods("new");
     this.getHomeGoods("sell");
-  }
+  },
+  mounted() {
+    // 1.上拉加载更多的事件监听
+    const refresh = this.debounce(this.$refs.scroll.refresh, 200);
+    this.$bus.$on("imageLoadFinish", () => {
+      // this.$refs.scroll.refresh();
+      refresh();
+    });
+    // 2.
+  },
+  activated() {
+    // console.log('activated')
+    this.$refs.scroll.scrollTo(0,this.saveY,0);
+    this.$refs.scroll.refresh()
+  },
+  deactivated() {
+    this.saveY = this.$refs.scroll.getScrollY()
+    // console.log(this.saveY)
+  },
 };
 </script>
 
@@ -133,21 +185,20 @@ export default {
 .home-bar {
   background-color: var(--color-tint);
   color: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 9;
 }
 .tab-control {
-  position: sticky;
-  top: 43px; /*顶部navbar的高度*/
+  position:relative;
   z-index: 9;
+}
+.fixed {
+  position: fixed;
+  left: 0;
+  top: 44px;
+  right: 0;
 }
 .content {
   overflow: hidden;
   height: 623px;
-  margin-top: 44px;
 }
 /**switch  // position: absolute;
   // top: 44px;
