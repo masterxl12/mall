@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item" @click="itemClick">
-    <img :src="goodsItem.show.img" alt @load="imgItemLoad" />
+    <img :src="showImage" alt @load="imgItemLoad" />
     <div class="goods-info">
       <p>{{goodsItem.title}}</p>
       <span class="price">{{goodsItem.price}}</span>
@@ -18,6 +18,12 @@ export default {
       default() {
         return {};
       }
+    }
+  },
+  computed: {
+    showImage(){
+      // 有home首页、商品详情页的商品推荐栏都有用到goodlistitem组件，这里对数据进行判断，使用计算属性
+      return this.goodsItem.image || this.goodsItem.show.img
     }
   },
   methods: {

@@ -32,6 +32,7 @@ export default {
   methods: {
     titleBtn(index){
       this.currentIndex = index;
+      this.$emit('titleClick',index)
     },
     backBtn(){
       this.$router.go(-1)

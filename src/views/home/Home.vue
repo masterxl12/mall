@@ -45,6 +45,7 @@ import RecommendView from "./childComs/RecommendView";
 import FeatureView from "./childComs/FeatureView";
 
 import { getHomeMultidata, getHomeGoods } from "network/home";
+import { itemListenerMixin } from "common/mixin";
 export default {
   name: "home",
   data() {
@@ -60,7 +61,7 @@ export default {
       isShowBackTop: true,
       isTabFixed: false,
       tabOffsetTop: 0,
-      saveY:0
+      saveY: 0
     };
   },
   components: {
@@ -78,6 +79,7 @@ export default {
       return this.goods[this.currentType].list;
     }
   },
+  mixins: [itemListenerMixin],
   methods: {
     /**
      * 事件监听相关的方法
@@ -105,28 +107,18 @@ export default {
     // 监听回到顶部组件的显示与隐藏
     contentScroll(position) {
       // 1. 判断BackTop是否显示
-      this.isShowBackTop = (-position.y) > 1000;
+      this.isShowBackTop = -position.y > 1000;
       // 2. 决定tabControl是否吸顶（position:fixed）
-      this.isTabFixed = (-position.y) > this.tabOffsetTop;
+      this.isTabFixed = -position.y > this.tabOffsetTop;
     },
     // 上拉加载更多
     loadMore() {
       // console.log('上拉加载更多！')
       this.getHomeGoods(this.currentType);
     },
-    // 防抖函数
-    debounce(func, delay) {
-      let timer = null;
-      return function(...args) {
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
-          func.apply(args);
-        }, delay);
-      };
-    },
     // 首页轮播图加载完成
     swiperLoadFinish() {
-      this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop - 44
+      this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop - 44;
       // console.log(this.$refs.tabControl.$el.offsetTop);
     },
     /**
@@ -156,24 +148,18 @@ export default {
     this.getHomeGoods("new");
     this.getHomeGoods("sell");
   },
-  mounted() {
-    // 1.上拉加载更多的事件监听
-    const refresh = this.debounce(this.$refs.scroll.refresh, 200);
-    this.$bus.$on("imageLoadFinish", () => {
-      // this.$refs.scroll.refresh();
-      refresh();
-    });
-    // 2.
-  },
+  mounted() {},
   activated() {
     // console.log('activated')
-    this.$refs.scroll.scrollTo(0,this.saveY,0);
-    this.$refs.scroll.refresh()
+    this.$refs.scroll.scrollTo(0, this.saveY, 0);
+    this.$refs.scroll.refresh();
   },
   deactivated() {
-    this.saveY = this.$refs.scroll.getScrollY()
+    this.saveY = this.$refs.scroll.getScrollY();
     // console.log(this.saveY)
-  },
+    // 离开home页面取消对全局事件总线的监听
+    this.$bus.$off("imageLoadFinish", this.itemImgListener);
+  }
 };
 </script>
 
@@ -187,7 +173,7 @@ export default {
   color: #fff;
 }
 .tab-control {
-  position:relative;
+  position: relative;
   z-index: 9;
 }
 .fixed {
