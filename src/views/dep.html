@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue</title>
+
+</head>
+
+<body>
+  <div id="app">
+    <div>{name}</div>
+    <div>{name}</div>
+    <div>{name}</div>
+    <p>{{age}}</p>
+    <p>{{age}}</p>
+  </div>
+  <script src="../../node_modules/vue/dist/vue.js"></script>
+  <script>
+    const obj = {
+      name: 'Koby',
+      age: 40,
+      height: 1.98,
+      gender: 'male'
+    };
+    Object.keys(obj).forEach(key => {
+      let value = obj[key];
+      Object.defineProperty(obj, key, {
+        set(NewValue) {
+          value = NewValue;
+          console.log('监听' + key + '值发生改变!')
+        },
+        get() {
+          console.log('获取' + key + '对应的值:' + value)
+          return value
+        }
+      })
+    })
+    class Dep {
+      constructor() {
+        this.subs = []
+      }
+      addSub(watcher) {
+        this.subs.push(watcher)
+      }
+      notify() {
+        this.subs.forEach(item => {
+          item.update()
+        })
+      }
+    }
+    class Watcher {
+      constructor(name) {
+        this.name = name
+      }
+      update() {
+        console.log(this.name + '发生update')
+      }
+    }
+    const dep = new Dep()
+    const w1 = new Watcher('张三');
+    dep.addSub(w1);
+    const w2 = new Watcher('李四');
+    dep.addSub(w2);
+    const w3 = new Watcher('王五');
+    dep.addSub(w3);
+    dep.notify()
+    const app = new Vue(
+      {
+      el: '#app',
+      data: {
+        name: 'code',
+        age: 18
+      },
+      methods: {},
+      mounted() {
+        console.log(this.message)
+      },
+    })
+  </script>
+
+</html>

@@ -9,7 +9,7 @@ export default {
   name: "toast",
   data() {
     return {
-      isShow: true,
+      isShow: false,
       message: ""
     };
   },
