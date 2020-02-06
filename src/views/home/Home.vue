@@ -45,7 +45,7 @@ import RecommendView from "./childComs/RecommendView";
 import FeatureView from "./childComs/FeatureView";
 
 import { getHomeMultidata, getHomeGoods } from "network/home";
-import { itemListenerMixin } from "common/mixin";
+import { itemListenerMixin,backTop } from "common/mixin";
 export default {
   name: "home",
   data() {
@@ -72,14 +72,13 @@ export default {
     TabControl,
     GoodList,
     Scroll,
-    BackTop
   },
   computed: {
     showGoods() {
       return this.goods[this.currentType].list;
     }
   },
-  mixins: [itemListenerMixin],
+  mixins: [itemListenerMixin,backTop],
   methods: {
     /**
      * 事件监听相关的方法
@@ -99,10 +98,6 @@ export default {
       }
       this.$refs.tabControl1.currentIndex = index;
       this.$refs.tabControl2.currentIndex = index;
-    },
-    backTop() {
-      // console.log(this.$refs.scroll.scrollTo);
-      this.$refs.scroll.scrollTo(0, 0);
     },
     // 监听回到顶部组件的显示与隐藏
     contentScroll(position) {

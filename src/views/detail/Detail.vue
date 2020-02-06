@@ -1,7 +1,7 @@
 <template>
   <div id="detail">
-    <detail-nav class="detail-nav-bar" @titleClick="titleClick" />
-    <scroll class="scroll-height" ref="scroll">
+    <detail-nav class="detail-nav-bar" ref="navDetail" @titleClick="titleClick" />
+    <scroll class="scroll-height" ref="scroll" :probe-type="3" @scroll="contentScroll">
       <detail-swiper :top-images="topImages" />
       <detail-base-info :goods="goods" />
       <detail-shop-info :shop="shop" />
@@ -10,6 +10,8 @@
       <detail-comment-info ref="comment" :comment-info="commentInfo" />
       <good-list ref="recommend" :goods="recommends" />
     </scroll>
+    <detail-bottom @addCart="addToCart" />
+    <back-top @click.native="backTop" v-show="isShowBackTop" />
   </div>
 </template>
 
@@ -21,11 +23,13 @@ import DetailShopInfo from "./childComps/DetailShopInfo";
 import DetailGoodsInfo from "./childComps/DetailGoodsInfo";
 import DetailParamInfo from "./childComps/DetailParamInfo";
 import DetailCommentInfo from "./childComps/DetailCommentInfo";
+import DetailBottom from "./childComps/DetailBottom";
 
 import Scroll from "components/common/scroll/Scroll";
 import GoodList from "components/content/goodLists/GoodList";
+import BackTop from "components/content/backtop/BackTop";
 
-import { itemListenerMixin } from "common/mixin";
+import { itemListenerMixin, backTop } from "common/mixin";
 import { debounce } from "common/utils";
 import {
   getDetail,
@@ -47,7 +51,8 @@ export default {
       commentInfo: {},
       recommends: [],
       themePosY: [],
-      getThemeTop: null
+      getThemeTop: null,
+      currentIndex: 0,
     };
   },
   components: {
@@ -59,9 +64,10 @@ export default {
     DetailGoodsInfo,
     DetailParamInfo,
     DetailCommentInfo,
-    GoodList
+    GoodList,
+    DetailBottom,
   },
-  mixins: [itemListenerMixin],
+  mixins: [itemListenerMixin, backTop],
   created() {
     // 1.保存传入的id
     this.iid = this.$route.params.id;
@@ -93,7 +99,6 @@ export default {
     });
     // 3. 获取推荐数据
     getRecommend().then(res => {
-      // console.log(res);
       this.recommends = res.data.list;
     });
     // 4.给getThemeTop赋值（对给this.getThemeTop赋值的操作进行防抖）
@@ -103,10 +108,91 @@ export default {
       this.themePosY.push(this.$refs.param.$el.offsetTop);
       this.themePosY.push(this.$refs.comment.$el.offsetTop);
       this.themePosY.push(this.$refs.recommend.$el.offsetTop);
-      console.log(this.themePosY)
+      this.themePosY.push(Number.MIN_VALUE);
+      // console.log(this.themePosY);
     });
   },
   methods: {
+    // 添加商品到购物车
+    addToCart() {
+      // 1. 获取购物车需要展示的信息
+      const product = {};
+      product.image = this.topImages[0];
+      product.desc = this.goods.desc;
+      product.price = this.goods.realPrice;
+      product.title = this.goods.title;
+      product.iid = this.iid;
+      // 2. 将商品添加到购物车里
+      // this.$store.commit('addCart',product)
+      this.$store.dispatch("addCart", product).then(res => {
+        // 显示添加商品到购物车信息，调用内部组件
+        // console.log(this.$toast.show);
+        this.$toast.show(res,2000)
+        
+      });
+    },
+    contentScroll(position) {
+      this.isShowBackTop = -position.y > 1000;
+      // 获取y值
+      const positionY = -position.y;
+      let len = this.themePosY.length;
+      // this.themePosY = [0, 19809, 20471, 20780],positionY的区间位置：
+
+      // 第一种情况
+      // positionY在0~19809，     index = 0
+      // positionY在19809~20471   index = 1
+      // positionY在20471~20780   index = 2
+
+      // 第二种情况
+      // positionY > 20471       index = 3
+
+      /**
+       * 普通做法：
+       *条件1成立：this.currentIndex !== i
+          说明：防止赋值的操作过于频繁
+       条件2成立：(i < len - 1 &&
+            positionY >= this.themePosY[i] &&
+            positionY < this.themePosY[i + 1]) ||
+            (i === len - 1 && positionY >= this.themePosY[i])
+          说明：
+          [1] (i < len - 1 && positionY >= this.themePosY[i] && 
+          positionY < this.themePosY[i + 1])
+          * 判断区间：在 0 和 某个数字之间（i < len - 1）
+          [2] (i === len - 1 && positionY >= this.themePosY[i]))
+          * 判断大于大于： i === len - 1
+        *
+        * hack技术：
+        * 对数组末尾增加一个最大数Number.MAX_VALUE(空间换时间)
+        * this.themsY.push(Number.MAX_VALUE);
+        * 都转换成关于条件[1]的判断
+        * [注]:只考虑len-1前的数据判断
+        * 
+       */
+
+      // for (let i = 0; i < len; i++) {
+      //   if (
+      //     this.currentIndex !== i &&
+      //     ((i < len - 1 &&
+      //       positionY >= this.themePosY[i] &&
+      //       positionY < this.themePosY[i + 1]) ||
+      //       (i === len - 1 && positionY >= this.themePosY[i]))
+      //   ) {
+      //     this.currentIndex = i;
+      //     this.$refs.navDetail.currentIndex = this.currentIndex;
+      //   }
+      // }
+      for (let i = 0; i < len - 1; i++) {
+        if (
+          this.currentIndex !== i &&
+          positionY >= this.themePosY[i] &&
+          positionY < this.themePosY[i + 1]
+        ) {
+          this.currentIndex = i;
+          this.$refs.navDetail.currentIndex = this.currentIndex;
+        }
+      }
+      // console.log(this.themePosY,len);
+    },
     imgLoad() {
       // 重新刷新
       // this.$refs.scroll.refresh();
@@ -121,8 +207,7 @@ export default {
       this.$refs.scroll.scrollTo(0, -this.themePosY[index], 100);
     }
   },
-  mounted() {
-  },
+  mounted() {},
   destroyed() {
     this.$bus.$off("imageLoadFinish", this.itemImgListener);
   }

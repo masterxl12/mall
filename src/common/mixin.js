@@ -3,7 +3,7 @@ export const itemListenerMixin = {
   data() {
     return {
       itemImgListener: null,
-      newRefresh:null
+      newRefresh: null
     }
   },
   mounted() {
@@ -16,5 +16,21 @@ export const itemListenerMixin = {
     this.$bus.$on("imageLoadFinish", () => {
       this.itemImgListener;
     });
+  },
+}
+
+import BackTop from "components/content/backtop/BackTop";
+export const backTop = {
+  data() {
+    return {
+      isShowBackTop: true
+    }
+  },
+  components: { BackTop },
+  methods: {
+    // 滚动到顶部
+    backTop() {
+      this.$refs.scroll.scrollTo(0, 0);
+    },
   },
 }
