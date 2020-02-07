@@ -11,9 +11,9 @@
 
 <body>
   <div id="app">
-    <div>{name}</div>
-    <div>{name}</div>
-    <div>{name}</div>
+    <div>{{name}}</div>
+    <div>{{name}}</div>
+    <div>{{name}}</div>
     <p>{{age}}</p>
     <p>{{age}}</p>
   </div>
@@ -69,16 +69,16 @@
     dep.notify()
     const app = new Vue(
       {
-      el: '#app',
-      data: {
-        name: 'code',
-        age: 18
-      },
-      methods: {},
-      mounted() {
-        console.log(this.message)
-      },
-    })
+        el: '#app',
+        data: {
+          name: 'code',
+          age: 18
+        },
+        methods: {},
+        mounted() {
+          console.log(this.message)
+        },
+      })
   </script>
 
 </html>
